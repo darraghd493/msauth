@@ -8,7 +8,6 @@ import me.darragh.msauth.SimpleAuthenticationRecord;
 import me.darragh.msauth.minecraft.MinecraftProfile;
 import me.darragh.msauth.oauth2.server.OAuthResponseState;
 import me.darragh.msauth.oauth2.server.OAuthServerHandler;
-import me.darragh.msauth.util.BrowserUtil;
 import me.darragh.msauth.util.QueryUtil;
 
 import java.io.IOException;
@@ -108,7 +107,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
         } catch (Exception e) {
             throw new RuntimeException("Failed to handle response.", e);
         }
-        
+
         return OAuthResponseState.SUCCESS;
     }
 

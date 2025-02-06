@@ -7,8 +7,19 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 
+/**
+ * A utility class for opening URLs in a browser.
+ *
+ * @author darraghd493
+ * @since 1.0.0
+ */
 @UtilityClass
 public class BrowserUtil {
+    /**
+     * Open a URL in the default browser.
+     *
+     * @param url The URL to open.
+     */
     public static void open(String url) {
         try {
             Desktop.getDesktop().browse(URI.create(url));
@@ -17,6 +28,15 @@ public class BrowserUtil {
         }
     }
 
+    /**
+     * Open a URL in a specified browser.
+     *
+     * @implNote This method is not well-supported and has not been tested on all platforms. It is highly suggested to use the default method.
+     *
+     * @param url The URL to open.
+     * @param browser The browser to open the URL in.
+     * @param incognito Whether to open the URL in incognito mode.
+     */
     public static void open(String url, Browser browser, boolean incognito) {
         try {
             browser.open(url, incognito);
@@ -27,14 +47,9 @@ public class BrowserUtil {
 
     @RequiredArgsConstructor
     public enum Browser {
-        CHROME(
-                url -> Runtime.getRuntime().exec("cmd.exe /c start chrome.exe \"%s\"".formatted(url)),
-                url -> Runtime.getRuntime().exec("cmd.exe /c start chrome.exe --incognito \"%s\"".formatted(url))
-        ),
-        EDGE(
-                url -> Runtime.getRuntime().exec("cmd.exe /c start msedge.exe \"%s\"".formatted(url)),
-                url -> Runtime.getRuntime().exec("cmd.exe /c start msedge.exe -inprivate \"%s\"".formatted(url))
-        );
+        CHROME(BrowserOpeners.CHROME, BrowserOpeners.CHROME_INCOGNITO),
+        EDGE(BrowserOpeners.EDGE, BrowserOpeners.EDGE_INCOGNITO),
+        FIREFOX(BrowserOpeners.FIREFOX, BrowserOpeners.FIREFOX_INCOGNITO);
 
         private final BrowserOpener opener, incognitoOpener;
 
