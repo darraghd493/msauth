@@ -9,6 +9,7 @@ import me.darragh.msauth.minecraft.MinecraftProfile;
 import me.darragh.msauth.oauth2.server.OAuthResponseState;
 import me.darragh.msauth.oauth2.server.OAuthServerHandler;
 import me.darragh.msauth.util.BrowserUtil;
+import me.darragh.msauth.util.QueryUtil;
 
 import java.io.IOException;
 
@@ -91,22 +92,23 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      * @return The response state.
      */
     private OAuthResponseState handleResponse(HttpExchange exchange) {
-        // Expected query:
-        // code={...}
-        // TODO: Handle this better
         try {
             if (exchange.getRequestURI().getQuery() == null) {
                 throw new RuntimeException("No query in request.");
             }
 
-            String code = exchange.getRequestURI().getQuery().split("=")[1];
+            String code = QueryUtil.getQuery(exchange.getRequestURI().getQuery(), "code");
+            if (code == null) {
+                throw new RuntimeException("No code in query.");
+            }
+
             OAuthMicrosoftService microsoftService = new OAuthMicrosoftService(this.options);
             OAuthMicrosoftService.OAuthTokens oAuthTokens = microsoftService.fetchOAuthTokens(code, this.generateRedirectUrl());
             this.authenticateTokens(microsoftService, oAuthTokens);
         } catch (Exception e) {
             throw new RuntimeException("Failed to handle response.", e);
         }
-
+        
         return OAuthResponseState.SUCCESS;
     }
 
