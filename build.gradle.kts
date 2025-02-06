@@ -1,10 +1,19 @@
 plugins {
     id("java")
+    id("maven-publish")
 }
 
-group = "me.darragh"
-version = "1.0-SNAPSHOT"
+// Project properties:
+val baseGroup: String by project
+val lwjglVersion: String by project
+val lwjglNatives: String by project
 
+// Toolchains:
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+// Dependencies:
 repositories {
     mavenCentral()
 }
@@ -17,8 +26,99 @@ val annotationProcessorImplementation: Configuration by configurations.creating 
 }
 
 dependencies {
+    // Lombok
     annotationProcessorImplementation("org.projectlombok:lombok:1.18.34")
+
+    // JSpecify
     implementation("org.jspecify:jspecify:1.0.0")
+
+    // Gson
     implementation("com.google.code.gson:gson:2.12.1")
+
+    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+}
+
+// Tasks:
+tasks.compileJava {
+    options.encoding = "UTF-8"
+}
+
+tasks.javadoc {
+    options.encoding = "UTF-8"
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    isFailOnError = false
+}
+
+tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
+tasks.register<Jar>("javadocJar") {
+    archiveClassifier.set("javadoc")
+    from(tasks.javadoc)
+}
+
+// Publishing:
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = "me.darragh"
+            artifactId = "msauth"
+            version = project.version.toString()
+
+            pom {
+                name.set("msauth")
+                description.set("A simple library for authenticating with Microsoft for Minecraft")
+                url.set("https://github.com/Fentanyl-Client/msauth")
+                properties.set(mapOf(
+                    "java.version" to "17",
+                    "project.build.sourceEncoding" to "UTF-8",
+                    "project.reporting.outputEncoding" to "UTF-8"
+                ))
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://github.com/Fentanyl-Client/msauth/blob/main/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("darraghd493")
+                        name.set("Darragh")
+                    }
+                }
+                organization {
+                    name.set("Fentanyl")
+                    url.set("https://fentanyl.dev")
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/Fentanyl-Client/msauth.git")
+                    developerConnection.set("scm:git:ssh://github.com/Fentanyl-Client/msauth.git")
+                    url.set("https://github.com/Fentanyl-Client/msauth")
+                }
+            }
+
+            java {
+                withSourcesJar()
+                withJavadocJar()
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
+        maven {
+            name = "darraghsRepo"
+            url = uri("https://repo.darragh.website/releases")
+            credentials {
+                username = System.getenv("REPO_TOKEN")
+                password = System.getenv("REPO_SECRET")
+            }
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
+    }
 }
