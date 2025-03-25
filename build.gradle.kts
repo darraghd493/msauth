@@ -72,7 +72,7 @@ publishing {
             pom {
                 name.set("msauth")
                 description.set("A simple library for authenticating with Microsoft for Minecraft")
-                url.set("https://github.com/Fentanyl-Client/msauth")
+                url.set("https://github.com/darraghd493-Client/msauth")
                 properties.set(mapOf(
                     "java.version" to "17",
                     "project.build.sourceEncoding" to "UTF-8",
@@ -81,7 +81,7 @@ publishing {
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://github.com/Fentanyl-Client/msauth/blob/main/LICENSE")
+                        url.set("https://github.com/darraghd493-Client/msauth/blob/main/LICENSE")
                     }
                 }
                 developers {
@@ -91,13 +91,13 @@ publishing {
                     }
                 }
                 organization {
-                    name.set("Fentanyl")
-                    url.set("https://fentanyl.dev")
+                    name.set("darraghd493")
+                    url.set("https://darraghd493.dev")
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/Fentanyl-Client/msauth.git")
-                    developerConnection.set("scm:git:ssh://github.com/Fentanyl-Client/msauth.git")
-                    url.set("https://github.com/Fentanyl-Client/msauth")
+                    connection.set("scm:git:git://github.com/darraghd493-Client/msauth.git")
+                    developerConnection.set("scm:git:ssh://github.com/darraghd493-Client/msauth.git")
+                    url.set("https://github.com/darraghd493-Client/msauth")
                 }
             }
 
