@@ -199,7 +199,7 @@ public class OAuthMicrosoftService {
      * @param xblAuthentication The Xbox Live authentication.
      * @return The Minecraft authentication.
      */
-    public String authenticateMinecraft(String xblAuthentication) {
+    public MinecraftAuthentication authenticateMinecraft(String xblAuthentication) {
         MinecraftAuthenticationRequest req = new MinecraftAuthenticationRequest(xblAuthentication);
 
         RequestBody requestBody = RequestBody.create(GSON.toJson(req), MediaType.parse("application/json"));
@@ -216,11 +216,14 @@ public class OAuthMicrosoftService {
             if (!response.isSuccessful()) {
                 throw new RuntimeException("Failed to authenticate Minecraft: " + response.body().string());
             }
-            MinecraftAuthentication authResponse = GSON.fromJson(response.body().string(), MinecraftAuthentication.class);
-            return "%s %s".formatted(authResponse.tokenType(), authResponse.accessToken());
+            return GSON.fromJson(response.body().string(), MinecraftAuthentication.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to authenticate Minecraft.", e);
         }
+    }
+
+    public String getMinecraftAuthToken(MinecraftAuthentication authResponse) {
+        return "%s %s".formatted(authResponse.tokenType(), authResponse.accessToken());
     }
 
     /**
@@ -300,7 +303,7 @@ public class OAuthMicrosoftService {
 
     }
 
-    private record MinecraftAuthentication(@SerializedName("username") String uuid,
+    public record MinecraftAuthentication(@SerializedName("username") String uuid,
                                            @SerializedName("access_token") String accessToken,
                                            // ignored role
                                            // ignored metadata

@@ -11,6 +11,8 @@ import me.darragh.msauth.oauth2.server.OAuthServerHandler;
 import me.darragh.msauth.util.QueryUtil;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * An authenticator for web-based authentication using OAuth2.
@@ -23,6 +25,8 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
             "&response_type=code" +
             "&scope=XboxLive.signin%%20XboxLive.offline_access" +
             "&redirect_uri=%s&prompt=select_account";
+
+    private static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
 
     private final OAuthServerHandler serverHandler;
     private final OAuthOptions options;
@@ -73,14 +77,13 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
         }
 
         if (this.callback != null) {
-            this.callback.onAuthentication(null, null);
             this.callback = null;
         }
     }
 
     @Override
     public boolean isAuthenticating() {
-        return this.callback != null && this.serverHandler.isRunning();
+        return this.callback != null || this.serverHandler.isRunning();
     }
 
     /**
@@ -138,15 +141,32 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
         String xblToken = microsoftService.authenticateXboxLive(oAuthTokens.accessToken());
         String xblAuthentication = microsoftService.authenticateXSTS(xblToken);
         microsoftService.checkoutXboxProfile(xblAuthentication);
-        String minecraftToken = microsoftService.authenticateMinecraft(xblAuthentication);
+        OAuthMicrosoftService.MinecraftAuthentication minecraftAuthentication = microsoftService.authenticateMinecraft(xblAuthentication);
+        String minecraftToken = microsoftService.getMinecraftAuthToken(minecraftAuthentication);
         MinecraftProfile minecraftProfile = microsoftService.fetchMinecraftProfile(minecraftToken);
 
         // Supply callback with authentication record
         this.callback.onAuthentication(new SimpleAuthenticationRecord(
                 minecraftProfile.username(),
                 minecraftProfile.getUUID(),
-                oAuthTokens.accessToken(),
+                minecraftAuthentication.accessToken(),
                 oAuthTokens.refreshToken()
         ), minecraftProfile);
+
+        // Remove callback
+        this.callback = null;
+
+        // Forcefully stop the server after 3 seconds
+        EXECUTOR.execute(() -> {
+            try {
+                Thread.sleep(3000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            if (this.callback != null || !this.serverHandler.isRunning()) { // Another authentication is in progress
+                return;
+            }
+            this.serverHandler.stop();
+        });
     }
 }
