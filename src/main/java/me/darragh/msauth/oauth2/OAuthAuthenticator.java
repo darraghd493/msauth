@@ -66,6 +66,23 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
         this.callback = callback;
     }
 
+    @Override
+    public void stopAuthentication() {
+        if (this.serverHandler.isRunning()) {
+            this.serverHandler.stop();
+        }
+
+        if (this.callback != null) {
+            this.callback.onAuthentication(null, null);
+            this.callback = null;
+        }
+    }
+
+    @Override
+    public boolean isAuthenticating() {
+        return this.callback != null && this.serverHandler.isRunning();
+    }
+
     /**
      * Generates the URL to authenticate with.
      *

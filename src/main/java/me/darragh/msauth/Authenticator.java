@@ -66,4 +66,16 @@ public interface Authenticator<T extends AuthenticationRecord> {
         }
         return ref.get();
     }
+
+    /**
+     * Forcefully stops the current authentication process.
+     */
+    void stopAuthentication();
+
+    /**
+     * Returns whether the authenticator is currently authenticating.
+     *
+     * @return Whether the authenticator is currently authenticating.
+     */
+    boolean isAuthenticating();
 }

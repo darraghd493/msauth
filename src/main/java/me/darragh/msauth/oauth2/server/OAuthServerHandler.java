@@ -78,6 +78,15 @@ public class OAuthServerHandler implements HttpHandler {
     }
 
     /**
+     * Checks if the server is running.
+     *
+     * @return True if the server is running, false otherwise.
+     */
+    public boolean isRunning() {
+        return this.server != null && this.server.getAddress() != null;
+    }
+
+    /**
      * Writes the response to the given request in <i>a standard way</i>.
      * <p>
      * Performs:
