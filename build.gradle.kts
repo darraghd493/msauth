@@ -91,8 +91,8 @@ publishing {
                     }
                 }
                 organization {
-                    name.set("darraghd493")
-                    url.set("https://darraghd493.dev")
+                    name.set("darragh.website")
+                    url.set("https://darragh.website")
                 }
                 scm {
                     connection.set("scm:git:git://github.com/darraghd493-Client/msauth.git")
