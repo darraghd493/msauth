@@ -12,6 +12,8 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Handles the HTTP requests to the OAuth pageHandler.
@@ -22,6 +24,7 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class OAuthServerHandler implements HttpHandler {
     private static final Executor EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
+    private static final Logger LOGGER = Logger.getLogger(OAuthServerHandler.class.getName());
 
     private final OAuthPageHandler pageHandler;
     private final OAuthResponseHandler responseHandler;
@@ -44,15 +47,28 @@ public class OAuthServerHandler implements HttpHandler {
             return;
         }
 
-        OAuthResponseState responseState = this.responseHandler.handleResponse(exchange);
+        OAuthResponseState responseState = OAuthResponseState.FAILURE;
+        try {
+            // Attempt to handle the response, this might throw an exception
+            responseState = this.responseHandler.handleResponse(exchange);
+        } catch (Exception e) {
+            // If an exception occurs, log it and set the state to FAILURE
+            LOGGER.log(Level.SEVERE, "An error occurred while handling the OAuth response.", e);
+            responseState = OAuthResponseState.FAILURE;
+        }
+
+        // Based on the response state, generate the appropriate page
         String pageMessage = this.pageHandler.getMessage(responseState);
         String page = this.pageHandler.generatePage(pageMessage);
 
+        // Always write a response, even on failure
         this.standardWrite(exchange, page);
-        exchange.close();
 
+        // Stop the server only on successful authentication
         if (responseState == OAuthResponseState.SUCCESS) {
-            this.stop();
+            // Use the executor to stop the server asynchronously to avoid race conditions
+            // and ensure the response is fully sent.
+            EXECUTOR_SERVICE.execute(this::stop);
         }
     }
 
@@ -87,24 +103,25 @@ public class OAuthServerHandler implements HttpHandler {
     }
 
     /**
-     * Writes the response to the given request in <i>a standard way</i>.
+     * Writes the response to the given request in a standard way.
      * <p>
      * Performs:
-     *      - status code of 200
-     *      - indicates the content type of text/html
-     *      - indicates the charset of utf-8
-     *      - writes the given string to the response body in utf-8
+     * - status code of 200
+     * - indicates the content type of text/html
+     * - indicates the charset of utf-8
+     * - writes the given string to the response body in utf-8
      *
      * @param request The request to write to.
      * @param string The string to write.
      * @throws IOException If an I/O error occurs.
      */
     private void standardWrite(HttpExchange request, String string) throws IOException {
-        OutputStream out = request.getResponseBody();
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         request.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
-        request.sendResponseHeaders(200, string.length());
-        out.write(string.getBytes(StandardCharsets.UTF_8));
-        out.flush();
-        out.close();
+        request.sendResponseHeaders(200, bytes.length);
+        try (OutputStream outputStream = request.getResponseBody()) {
+            outputStream.write(bytes);
+            outputStream.flush();
+        }
     }
 }

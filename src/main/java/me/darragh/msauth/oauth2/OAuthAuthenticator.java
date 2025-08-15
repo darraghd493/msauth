@@ -72,9 +72,14 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
 
     @Override
     public void stopAuthentication() {
-        if (this.serverHandler.isRunning()) {
+        EXECUTOR.execute(() -> { // Shut the server down after 3 seconds - this may be called immediately after receiving a response by some clients. ~_~
+            try {
+                Thread.sleep(3000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             this.serverHandler.stop();
-        }
+        });
 
         if (this.callback != null) {
             this.callback = null;
