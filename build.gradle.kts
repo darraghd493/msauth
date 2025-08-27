@@ -72,7 +72,7 @@ publishing {
             pom {
                 name.set("msauth")
                 description.set("A simple library for authenticating with Microsoft for Minecraft")
-                url.set("https://github.com/darraghd493-Client/msauth")
+                url.set("https://github.com/darraghd493/msauth")
                 properties.set(mapOf(
                     "java.version" to "17",
                     "project.build.sourceEncoding" to "UTF-8",
@@ -81,7 +81,7 @@ publishing {
                 licenses {
                     license {
                         name.set("MIT License")
-                        url.set("https://github.com/darraghd493-Client/msauth/blob/main/LICENSE")
+                        url.set("https://github.com/darraghd493/msauth/blob/main/LICENSE")
                     }
                 }
                 developers {
@@ -95,9 +95,9 @@ publishing {
                     url.set("https://darragh.website")
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/darraghd493-Client/msauth.git")
-                    developerConnection.set("scm:git:ssh://github.com/darraghd493-Client/msauth.git")
-                    url.set("https://github.com/darraghd493-Client/msauth")
+                    connection.set("scm:git:git://github.com/darraghd493/msauth.git")
+                    developerConnection.set("scm:git:ssh://github.com/darraghd493/msauth.git")
+                    url.set("https://github.com/darraghd493/msauth")
                 }
             }
 
