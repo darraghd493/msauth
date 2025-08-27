@@ -3,11 +3,6 @@ plugins {
     id("maven-publish")
 }
 
-// Project properties:
-val baseGroup: String by project
-val lwjglVersion: String by project
-val lwjglNatives: String by project
-
 // Toolchains:
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
