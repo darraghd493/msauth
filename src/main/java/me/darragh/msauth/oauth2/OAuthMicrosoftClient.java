@@ -26,16 +26,12 @@ import java.net.http.HttpResponse;
  */
 @RequiredArgsConstructor
 @SuppressWarnings("SpellCheckingInspection")
-public class OAuthMicrosoftService {
+public class OAuthMicrosoftClient {
     private static final Gson GSON = GsonProvider.get();
 
     private static final String TOKEN_URL = "https://login.live.com/oauth20_token.srf";
     private static final String XBL_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate";
     private static final String XSTS_AUTH_URL = "https://xsts.auth.xboxlive.com/xsts/authorize";
-    private static final String MINECRAFT_AUTH_URL = "https://api.minecraftservices.com/authentication/login_with_xbox";
-    private static final String PROFILE_XBOX_URL = "https://profile.xboxlive.com/users/me/profile/settings?settings=GameDisplayName,AppDisplayName,AppDisplayPicRaw,GameDisplayPicRaw,"
-            + "PublicGamerpic,ShowUserAsAvatar,Gamerscore,Gamertag,ModernGamertag,ModernGamertagSuffix,UniqueModernGamertag,AccountTier,TenureLevel,XboxOneRep,"
-            + "PreferredColor,Location,Bio,Watermarks,RealName,RealNameOverride,IsQuarantined";
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NEVER)
@@ -74,7 +70,7 @@ public class OAuthMicrosoftService {
 
             return GSON.fromJson(response.body(), OAuthTokens.class);
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to fetch access token.", e);
+            throw new RuntimeException("Failed to fetch access token", e);
         }
     }
 
@@ -107,7 +103,7 @@ public class OAuthMicrosoftService {
             }
             return GSON.fromJson(response.body(), OAuthTokens.class);
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to use refresh token.", e);
+            throw new RuntimeException("Failed to use refresh token", e);
         }
     }
 
@@ -137,7 +133,7 @@ public class OAuthMicrosoftService {
             XboxLiveAuthentication authResponse = GSON.fromJson(response.body(), XboxLiveAuthentication.class);
             return authResponse.token();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to authenticate Xbox Live.", e);
+            throw new RuntimeException("Failed to authenticate Xbox Live", e);
         }
     }
 
@@ -166,69 +162,12 @@ public class OAuthMicrosoftService {
             XboxSecureTokenServiceAuthentication xstsResponse = GSON.fromJson(response.body(), XboxSecureTokenServiceAuthentication.class);
             return "XBL3.0 x=" + xstsResponse.displayClaims().xuis()[0].uhs() + ";" + xstsResponse.token();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to authenticate XSTS.", e);
+            throw new RuntimeException("Failed to authenticate XSTS", e);
         }
     }
 
-    /**
-     * Checks out the Xbox profile.
-     *
-     * @param xblAuthorisation The Xbox Live authorisation token.
-     */
-    public void checkoutXboxProfile(String xblAuthorisation) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(PROFILE_XBOX_URL))
-                .header("Authorization", xblAuthorisation)
-                .header("Accept", "application/json")
-                .header("x-xbl-contract-version", "3")
-                .GET()
-                .build();
-
-        try {
-            httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to checkout Xbox profile.", e);
-        }
-    }
-
-    /**
-     * Authenticates with Minecraft.
-     *
-     * @param xblAuthentication The Xbox Live authentication token.
-     * @return The Minecraft authentication token.
-     */
-    public MinecraftAuthentication authenticateMinecraft(String xblAuthentication) {
-        MinecraftAuthenticationRequest req = new MinecraftAuthenticationRequest(xblAuthentication);
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(MINECRAFT_AUTH_URL))
-                .header("Content-Type", "application/json")
-                .header("Accept", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(req)))
-                .build();
-
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Failed to authenticate Minecraft: " + response.body());
-            }
-            return GSON.fromJson(response.body(), MinecraftAuthentication.class);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to authenticate Minecraft.", e);
-        }
-    }
-
-    /**
-     * Formats the Minecraft authentication token for use in the Authorization header.
-     *
-     * @param authResponse The Minecraft authentication response.
-     * @return The formatted Minecraft authentication token.
-     */
-    public String getMinecraftAuthToken(MinecraftAuthentication authResponse) {
-        return "%s %s".formatted(authResponse.tokenType(), authResponse.accessToken());
-    }
-
-    // OAuth2
+    //region Records
+    //region OAuth2
     public record OAuthTokens(@SerializedName("token_type") String tokenType,
                               @SerializedName("expires_in") int expiresIn,
                               @SerializedName("scope") String scope,
@@ -236,8 +175,9 @@ public class OAuthMicrosoftService {
                               @SerializedName("refresh_token") String refreshToken,
                               @SerializedName("user_id") String userId) {
     }
+    //endregion
 
-    // Xbox Live
+    //region Xbox Live
     private record XboxLiveProperties(@SerializedName("AuthMethod") String authMethod,
                                       @SerializedName("SiteName") String siteName,
                                       @SerializedName("RpsTicket") String rpsTicket) {
@@ -260,8 +200,9 @@ public class OAuthMicrosoftService {
                                           @SerializedName("Token") String token,
                                           @SerializedName("DisplayClaims") XboxLiveDisplayClaims displayClaims) {
     }
+    //endregion
 
-    // Xbox Secure Token Service (XSTS) - integrated with Xbox Live
+    //region Xbox Secure Token Service (XSTS) - integrated with Xbox Live
     private record XboxSecureTokenServiceProperties(@SerializedName("UserTokens") String[] userTokens,
                                                     @SerializedName("SandboxId") String sandboxId) {
     }
@@ -276,18 +217,6 @@ public class OAuthMicrosoftService {
                                                         @SerializedName("Token") String token,
                                                         @SerializedName("DisplayClaims") XboxLiveDisplayClaims displayClaims) {
     }
-
-    // Minecraft
-    private record MinecraftAuthenticationRequest(@SerializedName("identityToken") String identityToken) {
-
-    }
-
-    public record MinecraftAuthentication(@SerializedName("username") String uuid,
-                                           @SerializedName("access_token") String accessToken,
-                                           // ignored role
-                                           // ignored metadata
-                                           @SerializedName("expires_in") int expiresIn,
-                                           @SerializedName("token_type") String tokenType) {
-    }
+    //endregion
+    //endregion
 }
-

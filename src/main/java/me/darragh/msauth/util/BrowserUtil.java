@@ -24,7 +24,7 @@ public class BrowserUtil {
         try {
             Desktop.getDesktop().browse(URI.create(url));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to open browser.", e);
+            throw new RuntimeException("Failed to open browser", e);
         }
     }
 
@@ -41,7 +41,7 @@ public class BrowserUtil {
         try {
             browser.open(url, incognito);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to open browser.", e);
+            throw new RuntimeException("Failed to open browser", e);
         }
     }
 

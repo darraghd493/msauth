@@ -5,8 +5,9 @@ import me.darragh.msauth.AuthenticationCallback;
 import me.darragh.msauth.AuthenticationRecord;
 import me.darragh.msauth.Authenticator;
 import me.darragh.msauth.SimpleAuthenticationRecord;
+import me.darragh.msauth.client.XboxClient;
 import me.darragh.msauth.minecraft.MinecraftProfile;
-import me.darragh.msauth.minecraft.MinecraftService;
+import me.darragh.msauth.client.MinecraftClient;
 import me.darragh.msauth.oauth2.server.OAuthResponseState;
 import me.darragh.msauth.oauth2.server.OAuthServerHandler;
 import me.darragh.msauth.util.QueryUtil;
@@ -42,25 +43,26 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
     @Override
     public void performAuthentication(AuthenticationRecord record, AuthenticationCallback<AuthenticationRecord> callback) {
         if (record.refreshToken() == null) {
-            throw new IllegalArgumentException("Record does not contain a refresh token.");
+            throw new IllegalArgumentException("Record does not contain a refresh token");
         }
 
         if (this.callback != null) {
-            throw new IllegalStateException("Already performing authentication.");
+            throw new IllegalStateException("Already performing authentication");
         }
 
         this.callback = callback;
 
-        MinecraftService minecraftService = new MinecraftService();
-        OAuthMicrosoftService microsoftService = new OAuthMicrosoftService(this.options);
-        OAuthMicrosoftService.OAuthTokens oAuthTokens = microsoftService.useRefreshToken(record.refreshToken(), this.generateRedirectUrl());
-        this.authenticateTokens(minecraftService, microsoftService, oAuthTokens);
+        OAuthMicrosoftClient microsoftClient = new OAuthMicrosoftClient(this.options);
+        XboxClient xboxClient = new XboxClient();
+        MinecraftClient minecraftClient = new MinecraftClient();
+        OAuthMicrosoftClient.OAuthTokens oAuthTokens = microsoftClient.useRefreshToken(record.refreshToken(), this.generateRedirectUrl());
+        this.authenticateTokens(microsoftClient, xboxClient, minecraftClient, oAuthTokens);
     }
 
     @Override
     public void performAuthentication(AuthenticationCallback<AuthenticationRecord> callback) {
         if (this.callback != null) {
-            throw new IllegalStateException("Already performing authentication.");
+            throw new IllegalStateException("Already performing authentication");
         }
 
         try {
@@ -120,20 +122,21 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
     private OAuthResponseState handleResponse(HttpExchange exchange) {
         try {
             if (exchange.getRequestURI().getQuery() == null) {
-                throw new RuntimeException("No query in request.");
+                throw new RuntimeException("No query in request");
             }
 
             String code = QueryUtil.getQuery(exchange.getRequestURI().getQuery(), "code");
             if (code == null) {
-                throw new RuntimeException("No code in query.");
+                throw new RuntimeException("No code in query");
             }
 
-            MinecraftService minecraftService = new MinecraftService();
-            OAuthMicrosoftService microsoftService = new OAuthMicrosoftService(this.options);
-            OAuthMicrosoftService.OAuthTokens oAuthTokens = microsoftService.fetchOAuthTokens(code, this.generateRedirectUrl());
-            this.authenticateTokens(minecraftService, microsoftService, oAuthTokens);
+            OAuthMicrosoftClient microsoftClient = new OAuthMicrosoftClient(this.options);
+            XboxClient xboxClient = new XboxClient();
+            MinecraftClient minecraftClient = new MinecraftClient();
+            OAuthMicrosoftClient.OAuthTokens oAuthTokens = microsoftClient.fetchOAuthTokens(code, this.generateRedirectUrl());
+            this.authenticateTokens(microsoftClient, xboxClient, minecraftClient, oAuthTokens);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to handle response.", e);
+            throw new RuntimeException("Failed to handle response", e);
         }
 
         return OAuthResponseState.SUCCESS;
@@ -142,16 +145,16 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
     /**
      * Authenticates the OAuth tokens and supplies the callback with the authentication record.
      *
-     * @param microsoftService The Microsoft communication service.
+     * @param microsoftClient The Microsoft communication service.
      * @param oAuthTokens The OAuth tokens.
      */
-    private void authenticateTokens(MinecraftService minecraftService, OAuthMicrosoftService microsoftService, OAuthMicrosoftService.OAuthTokens oAuthTokens) {
-        String xblToken = microsoftService.authenticateXboxLive(oAuthTokens.accessToken());
-        String xblAuthenticationToken = microsoftService.authenticateXSTS(xblToken);
-        microsoftService.checkoutXboxProfile(xblAuthenticationToken);
-        OAuthMicrosoftService.MinecraftAuthentication minecraftAuthentication = microsoftService.authenticateMinecraft(xblAuthenticationToken);
-        String minecraftToken = microsoftService.getMinecraftAuthToken(minecraftAuthentication);
-        MinecraftProfile minecraftProfile = minecraftService.fetchMinecraftProfile(minecraftToken);
+    private void authenticateTokens(OAuthMicrosoftClient microsoftClient, XboxClient xboxClient, MinecraftClient minecraftClient, OAuthMicrosoftClient.OAuthTokens oAuthTokens) {
+        String xblToken = microsoftClient.authenticateXboxLive(oAuthTokens.accessToken());
+        String xblAuthenticationToken = microsoftClient.authenticateXSTS(xblToken);
+        xboxClient.checkoutXboxProfile(xblAuthenticationToken);
+        MinecraftClient.MinecraftAuthentication minecraftAuthentication = minecraftClient.authenticateMinecraft(xblAuthenticationToken);
+        String minecraftToken = minecraftClient.getMinecraftAuthToken(minecraftAuthentication);
+        MinecraftProfile minecraftProfile = minecraftClient.fetchMinecraftProfile(minecraftToken);
 
         // Supply callback with authentication record
         this.callback.onAuthentication(new SimpleAuthenticationRecord(
