@@ -6,6 +6,7 @@ import me.darragh.msauth.AuthenticationRecord;
 import me.darragh.msauth.Authenticator;
 import me.darragh.msauth.SimpleAuthenticationRecord;
 import me.darragh.msauth.minecraft.MinecraftProfile;
+import me.darragh.msauth.minecraft.MinecraftService;
 import me.darragh.msauth.oauth2.server.OAuthResponseState;
 import me.darragh.msauth.oauth2.server.OAuthServerHandler;
 import me.darragh.msauth.util.QueryUtil;
@@ -50,9 +51,10 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
 
         this.callback = callback;
 
+        MinecraftService minecraftService = new MinecraftService();
         OAuthMicrosoftService microsoftService = new OAuthMicrosoftService(this.options);
         OAuthMicrosoftService.OAuthTokens oAuthTokens = microsoftService.useRefreshToken(record.refreshToken(), this.generateRedirectUrl());
-        this.authenticateTokens(microsoftService, oAuthTokens);
+        this.authenticateTokens(minecraftService, microsoftService, oAuthTokens);
     }
 
     @Override
@@ -126,9 +128,10 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
                 throw new RuntimeException("No code in query.");
             }
 
+            MinecraftService minecraftService = new MinecraftService();
             OAuthMicrosoftService microsoftService = new OAuthMicrosoftService(this.options);
             OAuthMicrosoftService.OAuthTokens oAuthTokens = microsoftService.fetchOAuthTokens(code, this.generateRedirectUrl());
-            this.authenticateTokens(microsoftService, oAuthTokens);
+            this.authenticateTokens(minecraftService, microsoftService, oAuthTokens);
         } catch (Exception e) {
             throw new RuntimeException("Failed to handle response.", e);
         }
@@ -142,13 +145,13 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      * @param microsoftService The Microsoft communication service.
      * @param oAuthTokens The OAuth tokens.
      */
-    private void authenticateTokens(OAuthMicrosoftService microsoftService, OAuthMicrosoftService.OAuthTokens oAuthTokens) {
+    private void authenticateTokens(MinecraftService minecraftService, OAuthMicrosoftService microsoftService, OAuthMicrosoftService.OAuthTokens oAuthTokens) {
         String xblToken = microsoftService.authenticateXboxLive(oAuthTokens.accessToken());
-        String xblAuthentication = microsoftService.authenticateXSTS(xblToken);
-        microsoftService.checkoutXboxProfile(xblAuthentication);
-        OAuthMicrosoftService.MinecraftAuthentication minecraftAuthentication = microsoftService.authenticateMinecraft(xblAuthentication);
+        String xblAuthenticationToken = microsoftService.authenticateXSTS(xblToken);
+        microsoftService.checkoutXboxProfile(xblAuthenticationToken);
+        OAuthMicrosoftService.MinecraftAuthentication minecraftAuthentication = microsoftService.authenticateMinecraft(xblAuthenticationToken);
         String minecraftToken = microsoftService.getMinecraftAuthToken(minecraftAuthentication);
-        MinecraftProfile minecraftProfile = microsoftService.fetchMinecraftProfile(minecraftToken);
+        MinecraftProfile minecraftProfile = minecraftService.fetchMinecraftProfile(minecraftToken);
 
         // Supply callback with authentication record
         this.callback.onAuthentication(new SimpleAuthenticationRecord(

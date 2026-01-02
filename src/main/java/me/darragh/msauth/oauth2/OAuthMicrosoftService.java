@@ -3,7 +3,7 @@ package me.darragh.msauth.oauth2;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.RequiredArgsConstructor;
-import me.darragh.msauth.minecraft.MinecraftProfile;
+import me.darragh.msauth.gson.GsonProvider;
 import me.darragh.msauth.util.FormBuilder;
 
 import java.io.IOException;
@@ -27,11 +27,7 @@ import java.net.http.HttpResponse;
 @RequiredArgsConstructor
 @SuppressWarnings("SpellCheckingInspection")
 public class OAuthMicrosoftService {
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NEVER)
-            .build();
-
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = GsonProvider.get();
 
     private static final String TOKEN_URL = "https://login.live.com/oauth20_token.srf";
     private static final String XBL_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate";
@@ -40,7 +36,10 @@ public class OAuthMicrosoftService {
     private static final String PROFILE_XBOX_URL = "https://profile.xboxlive.com/users/me/profile/settings?settings=GameDisplayName,AppDisplayName,AppDisplayPicRaw,GameDisplayPicRaw,"
             + "PublicGamerpic,ShowUserAsAvatar,Gamerscore,Gamertag,ModernGamertag,ModernGamertagSuffix,UniqueModernGamertag,AccountTier,TenureLevel,XboxOneRep,"
             + "PreferredColor,Location,Bio,Watermarks,RealName,RealNameOverride,IsQuarantined";
-    private static final String MINECRAFT_PROFILE_URL = "https://api.minecraftservices.com/minecraft/profile";
+
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .build();
 
     private final OAuthOptions options;
 
@@ -67,7 +66,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to fetch access token: " + response.body());
@@ -102,7 +101,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to use refresh token: " + response.body());
             }
@@ -131,7 +130,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to authenticate Xbox Live: " + response.body());
             }
@@ -160,7 +159,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to authenticate XSTS: " + response.body());
             }
@@ -174,7 +173,7 @@ public class OAuthMicrosoftService {
     /**
      * Checks out the Xbox profile.
      *
-     * @param xblAuthorisation The Xbox Live authorisation.
+     * @param xblAuthorisation The Xbox Live authorisation token.
      */
     public void checkoutXboxProfile(String xblAuthorisation) {
         HttpRequest request = HttpRequest.newBuilder()
@@ -186,7 +185,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+            httpClient.send(request, HttpResponse.BodyHandlers.discarding());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to checkout Xbox profile.", e);
         }
@@ -195,8 +194,8 @@ public class OAuthMicrosoftService {
     /**
      * Authenticates with Minecraft.
      *
-     * @param xblAuthentication The Xbox Live authentication.
-     * @return The Minecraft authentication.
+     * @param xblAuthentication The Xbox Live authentication token.
+     * @return The Minecraft authentication token.
      */
     public MinecraftAuthentication authenticateMinecraft(String xblAuthentication) {
         MinecraftAuthenticationRequest req = new MinecraftAuthenticationRequest(xblAuthentication);
@@ -209,7 +208,7 @@ public class OAuthMicrosoftService {
                 .build();
 
         try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to authenticate Minecraft: " + response.body());
             }
@@ -219,33 +218,14 @@ public class OAuthMicrosoftService {
         }
     }
 
+    /**
+     * Formats the Minecraft authentication token for use in the Authorization header.
+     *
+     * @param authResponse The Minecraft authentication response.
+     * @return The formatted Minecraft authentication token.
+     */
     public String getMinecraftAuthToken(MinecraftAuthentication authResponse) {
         return "%s %s".formatted(authResponse.tokenType(), authResponse.accessToken());
-    }
-
-    /**
-     * Fetches the Minecraft profile.
-     *
-     * @param minecraftAuthentication The Minecraft authentication.
-     * @return The Minecraft profile.
-     */
-    public MinecraftProfile fetchMinecraftProfile(String minecraftAuthentication) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(MINECRAFT_PROFILE_URL))
-                .header("Authorization", minecraftAuthentication)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-
-        try {
-            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Failed to checkout Minecraft profile: " + response.body());
-            }
-            return GSON.fromJson(response.body(), MinecraftProfile.class);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to checkout Minecraft profile.", e);
-        }
     }
 
     // OAuth2
