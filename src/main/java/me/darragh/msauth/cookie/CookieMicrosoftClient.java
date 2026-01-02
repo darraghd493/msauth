@@ -55,7 +55,6 @@ public class CookieMicrosoftClient {
 
         String decodedResponse = new String(Base64.getDecoder().decode(encodedResponse), StandardCharsets.UTF_8)
                 .split("\"rp://api.minecraftservices.com/\",")[1];
-        System.out.println(decodedResponse);
 
         // Annoyingly, the response appears to be some weird broken JSON format
         // and quite frankly - I don't want to deal with it properly
