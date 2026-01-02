@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-val annotationProcessorImplementation: Configuration by configurations.creating {
+val annotationImplementation: Configuration by configurations.creating {
     configurations.compileOnly.get().extendsFrom(this)
     configurations.testCompileOnly.get().extendsFrom(this)
     configurations.annotationProcessor.get().extendsFrom(this)
@@ -21,14 +21,11 @@ val annotationProcessorImplementation: Configuration by configurations.creating 
 }
 
 dependencies {
-    // Lombok
-    annotationProcessorImplementation("org.projectlombok:lombok:1.18.34")
-
-    // JSpecify
-    implementation("org.jspecify:jspecify:1.0.0")
-
-    // Gson
     implementation("com.google.code.gson:gson:2.12.1")
+
+    // Annotations
+    compileOnly("org.jetbrains:annotations:26.0.2")
+    annotationImplementation("org.projectlombok:lombok:1.18.36")
 }
 
 // Tasks:
