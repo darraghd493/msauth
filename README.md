@@ -23,7 +23,9 @@ _This project is also available via. Jitpack. View more information [here](https
 
 ## Usage
 
-### 1. Create the authenticator
+### 1. OAuth Authentication
+
+#### 1.1. Create the authenticator
 
 ```java
 OAuthAuthenticator authenticator = new OAuthAuthenticator(
@@ -32,7 +34,7 @@ OAuthAuthenticator authenticator = new OAuthAuthenticator(
 );
 ```
 
-### 2. Initial login
+#### 1.2. Initial login
 
 ```java
 authenticator.performAuthentication((record, profile) -> {
@@ -44,7 +46,7 @@ authenticator.performAuthentication((record, profile) -> {
 AuthenticationRecord record = authenticator.performAuthentication();
 ```
 
-### 3. Refreshed login
+#### 1.3. Refreshed login
 
 ```java
 authenticator.performAuthentication(record, (newRecord, newProfile) -> {
@@ -57,6 +59,24 @@ AuthenticationRecord record2 = authenticator.performAuthentication(
         record
 );
 ```
+
+### 1. Cookie Authentication
+
+#### 1.1. Create the authenticator
+
+```java
+CookieAuthenticator authenticator = new CookieAuthenticator();
+```
+
+#### 1.2. Initial login
+
+```java
+authenticator.performAuthentication("your_microsoft_cookie_contents_here", (record, profile) -> {
+        // ...
+});
+```
+
+You may not refresh cookie based authentication. You must provide the cookie each time.
 
 ## License
 
