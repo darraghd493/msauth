@@ -11,6 +11,7 @@ import me.darragh.msauth.client.MinecraftClient;
 import me.darragh.msauth.oauth2.server.OAuthResponseState;
 import me.darragh.msauth.oauth2.server.OAuthServerHandler;
 import me.darragh.msauth.util.QueryUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.concurrent.Executor;
@@ -41,7 +42,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
     }
 
     @Override
-    public void performAuthentication(AuthenticationRecord record, AuthenticationCallback<AuthenticationRecord> callback) {
+    public void performAuthentication(AuthenticationRecord record, @NotNull AuthenticationCallback<AuthenticationRecord> callback) {
         if (record.refreshToken() == null) {
             throw new IllegalArgumentException("Record does not contain a refresh token");
         }
@@ -60,7 +61,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
     }
 
     @Override
-    public void performAuthentication(AuthenticationCallback<AuthenticationRecord> callback) {
+    public void performAuthentication(@NotNull AuthenticationCallback<AuthenticationRecord> callback) {
         if (this.callback != null) {
             throw new IllegalStateException("Already performing authentication");
         }

@@ -2,6 +2,7 @@ package me.darragh.msauth.oauth2;
 
 import me.darragh.msauth.oauth2.server.OAuthPageHandler;
 import me.darragh.msauth.oauth2.server.SimpleOAuthPageHandler;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents the options for OAuth2 authentication.
@@ -13,7 +14,7 @@ import me.darragh.msauth.oauth2.server.SimpleOAuthPageHandler;
  * @param port The port to run the OAuth2 pageHandler on.
  * @param pageHandler The pageHandler to handle the OAuth2 authentication.
  */
-public record OAuthOptions(String clientId, int port, OAuthPageHandler pageHandler) {
+public record OAuthOptions(@NotNull String clientId, int port, @NotNull OAuthPageHandler pageHandler) {
     public static final OAuthOptions DEFAULT = new OAuthOptions(
             "54fd49e4-2103-4044-9603-2b028c814ec3", // In-Game Account Switcher Client ID
             59125,

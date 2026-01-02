@@ -1,6 +1,7 @@
 package me.darragh.msauth;
 
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,14 +21,14 @@ public interface Authenticator<T extends AuthenticationRecord> {
      *               Depending on the implementation, this may be ignored/partially used.
      * @param callback The callback to call when the authentication is complete.
      */
-    void performAuthentication(T record, AuthenticationCallback<T> callback);
+    void performAuthentication(@NotNull T record, @NotNull AuthenticationCallback<T> callback);
 
     /**
      * Perform the initial authentication of the user.
      *
      * @param callback The callback to call when the authentication is complete.
      */
-    void performAuthentication(AuthenticationCallback<T> callback);
+    void performAuthentication(@NotNull AuthenticationCallback<T> callback);
 
     /**
      * Intended to re-authenticate the user using previously stored data.
@@ -39,7 +40,7 @@ public interface Authenticator<T extends AuthenticationRecord> {
      * @return The authentication record.
      */
     @SneakyThrows
-    default T performAuthentication(T record) {
+    default @NotNull T performAuthentication(@NotNull T record) {
         AtomicReference<T> ref = new AtomicReference<>(null);
         performAuthentication(record, (record1, profile) -> ref.set(record1));
         while (ref.get() == null) {
@@ -57,7 +58,7 @@ public interface Authenticator<T extends AuthenticationRecord> {
      * @return The authentication record.
      */
     @SneakyThrows
-    default T performAuthentication() {
+    default @NotNull T performAuthentication() {
         AtomicReference<T> ref = new AtomicReference<>(null);
         performAuthentication((record, profile) -> ref.set(record));
         while (ref.get() == null) {

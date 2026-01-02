@@ -1,6 +1,7 @@
 package me.darragh.msauth;
 
 import me.darragh.msauth.minecraft.MinecraftProfile;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A callback for when authentication is complete.
@@ -17,5 +18,5 @@ public interface AuthenticationCallback<T extends AuthenticationRecord> {
      *
      * @param record The authentication record.
      */
-    void onAuthentication(T record, MinecraftProfile profile);
+    void onAuthentication(@NotNull T record, @NotNull MinecraftProfile profile);
 }

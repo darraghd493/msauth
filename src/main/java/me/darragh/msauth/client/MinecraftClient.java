@@ -67,7 +67,7 @@ public class MinecraftClient {
      * @param authResponse The Minecraft authentication response.
      * @return The formatted Minecraft authentication token.
      */
-    public String getMinecraftAuthToken(MinecraftAuthentication authResponse) {
+    public @NotNull String getMinecraftAuthToken(@NotNull MinecraftAuthentication authResponse) {
         return "%s %s".formatted(authResponse.tokenType(), authResponse.accessToken());
     }
 
@@ -77,7 +77,7 @@ public class MinecraftClient {
      * @param minecraftAuthentication The Minecraft authentication.
      * @return The Minecraft profile.
      */
-    public MinecraftProfile fetchMinecraftProfile(String minecraftAuthentication) {
+    public @NotNull MinecraftProfile fetchMinecraftProfile(@NotNull String minecraftAuthentication) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(MINECRAFT_PROFILE_URL))
                 .header("Authorization", minecraftAuthentication)

@@ -1,5 +1,8 @@
 package me.darragh.msauth;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 
 /**
@@ -14,26 +17,26 @@ public interface AuthenticationRecord {
      *
      * @return The username of the user.
      */
-    String username();
+    @NotNull String username();
 
     /**
      * The UUID of the user.
      *
      * @return The UUID of the user.
      */
-    UUID uuid();
+    @NotNull UUID uuid();
 
     /**
      * The access token.
      *
      * @return The access token.
      */
-    String accessToken();
+    @NotNull String accessToken();
 
     /**
      * The refresh token.
      *
      * @return The refresh token.
      */
-    String refreshToken();
+    @Nullable String refreshToken();
 }

@@ -1,5 +1,7 @@
 package me.darragh.msauth.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
@@ -22,10 +24,8 @@ public class FormBuilder {
      * @param value The field value.
      * @return The current FormBuilder instance for chaining.
      */
-    public FormBuilder add(String key, String value) {
-        if (key != null && value != null) {
-            fields.put(key, value);
-        }
+    public FormBuilder add(@NotNull String key, @NotNull String value) {
+        fields.put(key, value);
         return this;
     }
 
@@ -34,7 +34,7 @@ public class FormBuilder {
      *
      * @return The constructed form data string.
      */
-    public String build() {
+    public @NotNull String build() {
         StringJoiner joiner = new StringJoiner("&");
         for (Map.Entry<String, String> entry : fields.entrySet()) {
             joiner.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8)

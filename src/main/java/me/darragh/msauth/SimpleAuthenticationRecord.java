@@ -1,5 +1,8 @@
 package me.darragh.msauth;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.UUID;
 
 /**
@@ -8,5 +11,8 @@ import java.util.UUID;
  * @author darraghd493
  * @since 1.0.0
  */
-public record SimpleAuthenticationRecord(String username, UUID uuid, String accessToken, String refreshToken) implements AuthenticationRecord {
+public record SimpleAuthenticationRecord(@NotNull String username,
+                                         @NotNull UUID uuid,
+                                         @NotNull String accessToken,
+                                         @Nullable String refreshToken) implements AuthenticationRecord {
 }

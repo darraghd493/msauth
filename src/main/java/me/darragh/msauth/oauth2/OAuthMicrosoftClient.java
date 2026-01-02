@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import lombok.RequiredArgsConstructor;
 import me.darragh.msauth.gson.GsonProvider;
 import me.darragh.msauth.util.FormBuilder;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,7 +47,7 @@ public class OAuthMicrosoftClient {
      * @param redirectUri The redirect URI.
      * @return The OAuth tokens.
      */
-    public OAuthTokens fetchOAuthTokens(String oAuthCode, String redirectUri) {
+    public @NotNull OAuthTokens fetchOAuthTokens(@NotNull String oAuthCode, @NotNull String redirectUri) {
         String formBody = new FormBuilder()
                 .add("client_id", this.options.clientId())
                 .add("code", oAuthCode)
@@ -81,7 +82,7 @@ public class OAuthMicrosoftClient {
      * @param redirectUri The redirect URI.
      * @return The new OAuth tokens.
      */
-    public OAuthTokens useRefreshToken(String refreshToken, String redirectUri) {
+    public @NotNull OAuthTokens useRefreshToken(@NotNull String refreshToken, @NotNull String redirectUri) {
         String formBody = new FormBuilder()
                 .add("client_id", this.options.clientId())
                 .add("refresh_token", refreshToken)
@@ -113,7 +114,7 @@ public class OAuthMicrosoftClient {
      * @param authToken The authentication token.
      * @return The Xbox Live token.
      */
-    public String authenticateXboxLive(String authToken) {
+    public @NotNull String authenticateXboxLive(@NotNull String authToken) {
         XboxLiveProperties properties = new XboxLiveProperties("RPS", "user.auth.xboxlive.com", "d=" + authToken);
         XboxLiveAuthenticationRequest req = new XboxLiveAuthenticationRequest(properties, "http://auth.xboxlive.com", "JWT");
 
@@ -143,7 +144,7 @@ public class OAuthMicrosoftClient {
      * @param xblToken The Xbox Live token.
      * @return The XSTS token.
      */
-    public String authenticateXSTS(String xblToken) {
+    public @NotNull String authenticateXSTS(@NotNull String xblToken) {
         XboxSecureTokenServiceProperties properties = new XboxSecureTokenServiceProperties(new String[] { xblToken }, "RETAIL");
         XboxSecureTokenServiceRequest req = new XboxSecureTokenServiceRequest(properties, "rp://api.minecraftservices.com/", "JWT");
 

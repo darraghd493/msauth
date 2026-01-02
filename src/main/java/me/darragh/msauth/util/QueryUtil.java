@@ -1,6 +1,8 @@
 package me.darragh.msauth.util;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A utility class for parsing query strings.
@@ -10,7 +12,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class QueryUtil {
-    public static String getQuery(String query, String key) {
+    public static @Nullable String getQuery(@NotNull String query, @NotNull String key) {
         String[] params = query.split("&");
         for (String param : params) {
             if (param.startsWith(key + "=")) {

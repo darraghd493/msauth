@@ -1,6 +1,7 @@
 package me.darragh.msauth.oauth2.server;
 
 import com.sun.net.httpserver.HttpExchange;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Handles the response from the OAuth pageHandler.
@@ -17,5 +18,5 @@ public interface OAuthResponseHandler {
      *
      * @return Whether the response was handled successfully.
      */
-    OAuthResponseState handleResponse(HttpExchange exchange);
+    @NotNull OAuthResponseState handleResponse(@NotNull HttpExchange exchange);
 }

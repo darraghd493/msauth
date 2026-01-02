@@ -1,5 +1,7 @@
 package me.darragh.msauth.oauth2.server;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Handles the generation of an OAuth response page.
  *
@@ -15,7 +17,7 @@ public interface OAuthPageHandler {
      *
      * @return The generated HTML page.
      */
-    String generatePage(String message);
+    @NotNull String generatePage(@NotNull String message);
 
     /**
      * Returns the message to display on the page for the given response state.
@@ -24,7 +26,7 @@ public interface OAuthPageHandler {
      *
      * @return The message to display on the page.
      */
-    default String getMessage(OAuthResponseState responseState) {
+    default @NotNull String getMessage(@NotNull OAuthResponseState responseState) {
         return responseState.getDefaultMessage();
     }
 }

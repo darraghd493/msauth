@@ -1,6 +1,7 @@
 package me.darragh.msauth.util;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A class containing {@link BrowserOpener} instances for various browsers and operating systems.
@@ -40,7 +41,7 @@ public class BrowserOpeners {
     public static final BrowserOpener FIREFOX = generateDynamicOpener(FIREFOX_WINDOWS, FIREFOX_MAC, FIREFOX_LINUX);
     public static final BrowserOpener FIREFOX_INCOGNITO = generateDynamicOpener(FIREFOX_WINDOWS_INCOGNITO, FIREFOX_MAC_INCOGNITO, FIREFOX_LINUX_INCOGNITO);
 
-    private static BrowserOpener generateDynamicOpener(BrowserOpener windows, BrowserOpener mac, BrowserOpener linux) {
+    private static BrowserOpener generateDynamicOpener(@NotNull BrowserOpener windows, @NotNull BrowserOpener mac, @NotNull BrowserOpener linux) {
         return url -> {
             OSUtil.OperatingSystem os = OSUtil.OS;
             switch (os) {

@@ -1,5 +1,6 @@
 package me.darragh.msauth.cookie;
 
+import me.darragh.msauth.util.QueryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,28 +48,26 @@ public class CookieMicrosoftClient {
                 redirectUrl3 = this.retrieveRedirect(redirectUrl2, cookies);
 
         // Attempt to extract the access token from the final redirect URL
-        String[] urlSegments = redirectUrl3.split("accessToken=");
-        if (urlSegments.length < 2) {
+        String encodedResponse = QueryUtil.getQuery(redirectUrl3, "accessToken");
+        if (encodedResponse == null) {
             throw new RuntimeException("Failed to extract access token from redirect URL: " + redirectUrl3);
-        } else {
-            String encodedResponseSegment = urlSegments[1];
-            String encodedResponse = encodedResponseSegment.split("&")[0];
-            String decodedResponse = new String(Base64.getDecoder().decode(encodedResponse), StandardCharsets.UTF_8)
-                    .split("\"rp://api.minecraftservices.com/\",")[1];
-            System.out.println(decodedResponse);
-
-            // Annoyingly, the response appears to be some weird broken JSON format
-            // and quite frankly - I don't want to deal with it properly
-            // so we'll just use regex to extract the values we need :p
-
-            // I'd expect there to be a better way to do this, but oh well
-            // We are relying on hopes and dreams that the token is the first "Token" field in the response
-
-            String uhs = decodedResponse.split("\\{\"DisplayClaims\":\\{\"xui\":\\[\\{\"uhs\":\"")[1].split("\"")[0];
-            String token = decodedResponse.split("\"Token\":\"")[1].split("\"")[0];
-
-            return "XBL3.0 x=" + uhs + ";" + token;
         }
+
+        String decodedResponse = new String(Base64.getDecoder().decode(encodedResponse), StandardCharsets.UTF_8)
+                .split("\"rp://api.minecraftservices.com/\",")[1];
+        System.out.println(decodedResponse);
+
+        // Annoyingly, the response appears to be some weird broken JSON format
+        // and quite frankly - I don't want to deal with it properly
+        // so we'll just use regex to extract the values we need :p
+
+        // I'd expect there to be a better way to do this, but oh well
+        // We are relying on hopes and dreams that the token is the first "Token" field in the response
+
+        String uhs = decodedResponse.split("\\{\"DisplayClaims\":\\{\"xui\":\\[\\{\"uhs\":\"")[1].split("\"")[0];
+        String token = decodedResponse.split("\"Token\":\"")[1].split("\"")[0];
+
+        return "XBL3.0 x=" + uhs + ";" + token;
     }
 
     /**

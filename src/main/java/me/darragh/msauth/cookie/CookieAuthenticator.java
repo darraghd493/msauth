@@ -25,12 +25,12 @@ public class CookieAuthenticator implements Authenticator<AuthenticationRecord> 
     private boolean authenticating = false;
 
     @Override
-    public void performAuthentication(AuthenticationRecord record, AuthenticationCallback<AuthenticationRecord> callback) {
+    public void performAuthentication(AuthenticationRecord record, @NotNull AuthenticationCallback<AuthenticationRecord> callback) {
         throw new UnsupportedOperationException("CookieAuthenticator does not support authentication using an existing record. Please use the original cookie file");
     }
 
     @Override
-    public void performAuthentication(AuthenticationCallback<AuthenticationRecord> callback) {
+    public void performAuthentication(@NotNull AuthenticationCallback<AuthenticationRecord> callback) {
         String httpUsableCookies = CookieUtil.reformatCookies(this.cookies); // usable in HTTP requests
         this.authenticating = true;
 

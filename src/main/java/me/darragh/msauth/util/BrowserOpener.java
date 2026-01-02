@@ -1,5 +1,7 @@
 package me.darragh.msauth.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 
 /**
@@ -16,5 +18,5 @@ public interface BrowserOpener {
      * @param url The URL to open.
      * @throws IOException If an error occurs while opening the URL.
      */
-    void open(String url) throws IOException;
+    void open(@NotNull String url) throws IOException;
 }

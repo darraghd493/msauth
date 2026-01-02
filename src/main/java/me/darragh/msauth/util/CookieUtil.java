@@ -1,6 +1,7 @@
 package me.darragh.msauth.util;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Handles the parsing of a cookie file to try and extract information usable for authentication via. {@link me.darragh.msauth.cookie.CookieAuthenticator}.
@@ -16,7 +17,7 @@ public class CookieUtil {
      * @param cookies The contents of the cookie file.
      * @return The reformatted cookie string.
      */
-    public static String reformatCookies(String cookies) {
+    public static @NotNull String reformatCookies(@NotNull String cookies) {
         StringBuilder builder = new StringBuilder();
 
         cookies.lines().forEach(line -> {

@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import lombok.RequiredArgsConstructor;
 import me.darragh.msauth.oauth2.OAuthOptions;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,28 +27,28 @@ public class OAuthServerHandler implements HttpHandler {
     private static final Executor EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
     private static final Logger LOGGER = Logger.getLogger(OAuthServerHandler.class.getName());
 
-    private final OAuthPageHandler pageHandler;
-    private final OAuthResponseHandler responseHandler;
+    private final @NotNull OAuthPageHandler pageHandler;
+    private final @NotNull OAuthResponseHandler responseHandler;
 
     private final int port;
 
     private HttpServer server;
 
-    public OAuthServerHandler(OAuthOptions options, OAuthResponseHandler responseHandler) {
+    public OAuthServerHandler(@NotNull OAuthOptions options, @NotNull OAuthResponseHandler responseHandler) {
         this.pageHandler = options.pageHandler();
         this.port = options.port();
         this.responseHandler = responseHandler;
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(@NotNull HttpExchange exchange) throws IOException {
         if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
             exchange.sendResponseHeaders(405, -1);
             exchange.close();
             return;
         }
 
-        OAuthResponseState responseState = OAuthResponseState.FAILURE;
+        OAuthResponseState responseState;
         try {
             // Attempt to handle the response, this might throw an exception
             responseState = this.responseHandler.handleResponse(exchange);
@@ -115,7 +116,7 @@ public class OAuthServerHandler implements HttpHandler {
      * @param string The string to write.
      * @throws IOException If an I/O error occurs.
      */
-    private void standardWrite(HttpExchange request, String string) throws IOException {
+    private void standardWrite(@NotNull HttpExchange request, @NotNull String string) throws IOException {
         byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         request.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
         request.sendResponseHeaders(200, bytes.length);

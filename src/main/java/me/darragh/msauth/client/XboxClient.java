@@ -1,5 +1,7 @@
 package me.darragh.msauth.client;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -33,7 +35,7 @@ public class XboxClient {
      * @apiNote This is used to validate the Xbox Live authorisation token. It will throw a {@link RuntimeException} if the token is invalid.
      * @param xblAuthorisation The Xbox Live authorisation token.
      */
-    public void checkoutXboxProfile(String xblAuthorisation) {
+    public void checkoutXboxProfile(@NotNull String xblAuthorisation) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(PROFILE_XBOX_URL))
                 .header("Authorization", xblAuthorisation)

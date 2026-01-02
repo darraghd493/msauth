@@ -2,6 +2,7 @@ package me.darragh.msauth.util;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class BrowserUtil {
      *
      * @param url The URL to open.
      */
-    public static void open(String url) {
+    public static void open(@NotNull String url) {
         try {
             Desktop.getDesktop().browse(URI.create(url));
         } catch (IOException e) {
@@ -37,7 +38,7 @@ public class BrowserUtil {
      * @param browser The browser to open the URL in.
      * @param incognito Whether to open the URL in incognito mode.
      */
-    public static void open(String url, Browser browser, boolean incognito) {
+    public static void open(@NotNull String url, @NotNull Browser browser, boolean incognito) {
         try {
             browser.open(url, incognito);
         } catch (IOException e) {

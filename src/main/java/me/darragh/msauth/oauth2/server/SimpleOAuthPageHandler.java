@@ -1,5 +1,7 @@
 package me.darragh.msauth.oauth2.server;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A simple {@link OAuthPageHandler} that displays a message.
  *
@@ -25,7 +27,7 @@ public class SimpleOAuthPageHandler implements OAuthPageHandler {
         """;
 
     @Override
-    public String generatePage(String message) {
+    public @NotNull String generatePage(@NotNull String message) {
         return String.format(PAGE, message);
     }
 }

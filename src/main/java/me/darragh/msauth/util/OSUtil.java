@@ -1,6 +1,7 @@
 package me.darragh.msauth.util;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class for identifying the operating system.
@@ -17,7 +18,7 @@ class OSUtil {
      *
      * @return The operating system.
      */
-    private static OperatingSystem getOS() {
+    private static @NotNull OperatingSystem getOS() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             return OperatingSystem.WINDOWS;
