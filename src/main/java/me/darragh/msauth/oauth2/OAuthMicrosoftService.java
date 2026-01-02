@@ -4,20 +4,22 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.RequiredArgsConstructor;
 import me.darragh.msauth.minecraft.MinecraftProfile;
-import okhttp3.*;
+import me.darragh.msauth.util.FormBuilder;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 /**
  * Handles communication with Microsoft's OAuth2 services.
  * <p>
- * This class is responsible for handling the OAuth2 flow with Microsoft's services.
- * It is used to authenticate with Xbox Live and Minecraft services.
- * This class is not thread-safe.
- * <p>
  * Useful resources:
  *      - <a href="https://minecraft.wiki/w/Microsoft_authentication">...</a>
  *      - <a href="https://gist.github.com/johngagefaulkner/7af56c87e29c85641474d2eb43eee441">...</a>
+ *
+ * @apiNote This class is not thread-safe.
  *
  * @author darraghd493
  * @since 1.0.0
@@ -25,9 +27,8 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @SuppressWarnings("SpellCheckingInspection")
 public class OAuthMicrosoftService {
-    private static final OkHttpClient HTTP_CLIENT = new OkHttpClient().newBuilder()
-            .followRedirects(false)
-            .followSslRedirects(false)
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NEVER)
             .build();
 
     private static final Gson GSON = new Gson();
@@ -51,7 +52,7 @@ public class OAuthMicrosoftService {
      * @return The OAuth tokens.
      */
     public OAuthTokens fetchOAuthTokens(String oAuthCode, String redirectUri) {
-        FormBody formBody = new FormBody.Builder()
+        String formBody = new FormBuilder()
                 .add("client_id", this.options.clientId())
                 .add("code", oAuthCode)
                 .add("grant_type", "authorization_code")
@@ -59,19 +60,21 @@ public class OAuthMicrosoftService {
                 .add("scope", "XboxLive.signin XboxLive.offline_access")
                 .build();
 
-        Request request = new Request.Builder()
-                .url(TOKEN_URL)
-                .post(formBody)
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(TOKEN_URL))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(formBody))
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to fetch access token: " + response.body().string());
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to fetch access token: " + response.body());
             }
-            return GSON.fromJson(response.body().string(), OAuthTokens.class);
-        } catch (IOException e) {
+
+            return GSON.fromJson(response.body(), OAuthTokens.class);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to fetch access token.", e);
         }
     }
@@ -84,7 +87,7 @@ public class OAuthMicrosoftService {
      * @return The new OAuth tokens.
      */
     public OAuthTokens useRefreshToken(String refreshToken, String redirectUri) {
-        FormBody formBody = new FormBody.Builder()
+        String formBody = new FormBuilder()
                 .add("client_id", this.options.clientId())
                 .add("refresh_token", refreshToken)
                 .add("grant_type", "refresh_token")
@@ -92,19 +95,19 @@ public class OAuthMicrosoftService {
                 .add("scope", "XboxLive.signin XboxLive.offline_access")
                 .build();
 
-        Request request = new Request.Builder()
-                .url(TOKEN_URL)
-                .post(formBody)
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(TOKEN_URL))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(formBody))
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to use refresh token: " + response.body().string());
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to use refresh token: " + response.body());
             }
-            return GSON.fromJson(response.body().string(), OAuthTokens.class);
-        } catch (IOException e) {
+            return GSON.fromJson(response.body(), OAuthTokens.class);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to use refresh token.", e);
         }
     }
@@ -119,23 +122,22 @@ public class OAuthMicrosoftService {
         XboxLiveProperties properties = new XboxLiveProperties("RPS", "user.auth.xboxlive.com", "d=" + authToken);
         XboxLiveAuthenticationRequest req = new XboxLiveAuthenticationRequest(properties, "http://auth.xboxlive.com", "JWT");
 
-        RequestBody requestBody = RequestBody.create(GSON.toJson(req), MediaType.parse("application/json"));
-        Request request = new Request.Builder()
-                .url(XBL_AUTH_URL)
-                .post(requestBody)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
+        String jsonBody = GSON.toJson(req);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(XBL_AUTH_URL))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to authenticate Xbox Live: " + response.body().string());
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to authenticate Xbox Live: " + response.body());
             }
-            XboxLiveAuthentication authResponse = GSON.fromJson(response.body().string(), XboxLiveAuthentication.class);
+            XboxLiveAuthentication authResponse = GSON.fromJson(response.body(), XboxLiveAuthentication.class);
             return authResponse.token();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to authenticate Xbox Live.", e);
         }
     }
@@ -150,23 +152,21 @@ public class OAuthMicrosoftService {
         XboxSecureTokenServiceProperties properties = new XboxSecureTokenServiceProperties(new String[] { xblToken }, "RETAIL");
         XboxSecureTokenServiceRequest req = new XboxSecureTokenServiceRequest(properties, "rp://api.minecraftservices.com/", "JWT");
 
-        RequestBody requestBody = RequestBody.create(GSON.toJson(req), MediaType.parse("application/json"));
-        Request request = new Request.Builder()
-                .url(XSTS_AUTH_URL)
-                .post(requestBody)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(XSTS_AUTH_URL))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(req)))
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to authenticate XSTS: " + response.body().string());
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to authenticate XSTS: " + response.body());
             }
-            XboxSecureTokenServiceAuthentication xstsResponse = GSON.fromJson(response.body().string(), XboxSecureTokenServiceAuthentication.class);
+            XboxSecureTokenServiceAuthentication xstsResponse = GSON.fromJson(response.body(), XboxSecureTokenServiceAuthentication.class);
             return "XBL3.0 x=" + xstsResponse.displayClaims().xuis()[0].uhs() + ";" + xstsResponse.token();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to authenticate XSTS.", e);
         }
     }
@@ -177,18 +177,17 @@ public class OAuthMicrosoftService {
      * @param xblAuthorisation The Xbox Live authorisation.
      */
     public void checkoutXboxProfile(String xblAuthorisation) {
-        Request request = new Request.Builder()
-                .url(PROFILE_XBOX_URL)
-                .addHeader("Authorization", xblAuthorisation)
-                .addHeader("Accept", "application/json")
-                .addHeader("x-xbl-contract-version", "3")
-                .get()
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(PROFILE_XBOX_URL))
+                .header("Authorization", xblAuthorisation)
+                .header("Accept", "application/json")
+                .header("x-xbl-contract-version", "3")
+                .GET()
                 .build();
 
-        //noinspection EmptyTryBlock
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-        } catch (IOException e) {
+        try {
+            HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to checkout Xbox profile.", e);
         }
     }
@@ -202,22 +201,20 @@ public class OAuthMicrosoftService {
     public MinecraftAuthentication authenticateMinecraft(String xblAuthentication) {
         MinecraftAuthenticationRequest req = new MinecraftAuthenticationRequest(xblAuthentication);
 
-        RequestBody requestBody = RequestBody.create(GSON.toJson(req), MediaType.parse("application/json"));
-        Request request = new Request.Builder()
-                .url(MINECRAFT_AUTH_URL)
-                .post(requestBody)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(MINECRAFT_AUTH_URL))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(req)))
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to authenticate Minecraft: " + response.body().string());
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to authenticate Minecraft: " + response.body());
             }
-            return GSON.fromJson(response.body().string(), MinecraftAuthentication.class);
-        } catch (IOException e) {
+            return GSON.fromJson(response.body(), MinecraftAuthentication.class);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to authenticate Minecraft.", e);
         }
     }
@@ -233,18 +230,20 @@ public class OAuthMicrosoftService {
      * @return The Minecraft profile.
      */
     public MinecraftProfile fetchMinecraftProfile(String minecraftAuthentication) {
-        Request request = new Request.Builder()
-                .url(MINECRAFT_PROFILE_URL)
-                .addHeader("Authorization", minecraftAuthentication)
-                .addHeader("Accept", "application/json")
-                .get()
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(MINECRAFT_PROFILE_URL))
+                .header("Authorization", minecraftAuthentication)
+                .header("Accept", "application/json")
+                .GET()
                 .build();
 
-        try (Response response = HTTP_CLIENT.newCall(request)
-                .execute()) {
-            assert response.body() != null;
-            return GSON.fromJson(response.body().string(), MinecraftProfile.class);
-        } catch (IOException e) {
+        try {
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to checkout Minecraft profile: " + response.body());
+            }
+            return GSON.fromJson(response.body(), MinecraftProfile.class);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to checkout Minecraft profile.", e);
         }
     }

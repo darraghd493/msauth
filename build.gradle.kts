@@ -29,9 +29,6 @@ dependencies {
 
     // Gson
     implementation("com.google.code.gson:gson:2.12.1")
-
-    // OkHttp
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
 
 // Tasks:
