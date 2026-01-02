@@ -101,7 +101,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      *
      * @return The URL to authenticate with.
      */
-    public String generateUrl() {
+    public @NotNull String generateUrl() {
         return String.format(AUTH_URL_TEMPLATE, this.options.clientId(), this.generateRedirectUrl());
     }
 
@@ -110,7 +110,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      *
      * @return The redirect URL.
      */
-    public String generateRedirectUrl() {
+    public @NotNull String generateRedirectUrl() {
         return "http://localhost:%s".formatted(this.options.port());
     }
 
@@ -120,7 +120,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      * @param exchange The exchange to handle.
      * @return The response state.
      */
-    private OAuthResponseState handleResponse(HttpExchange exchange) {
+    private @NotNull OAuthResponseState handleResponse(@NotNull HttpExchange exchange) {
         try {
             if (exchange.getRequestURI().getQuery() == null) {
                 throw new RuntimeException("No query in request");
@@ -149,7 +149,7 @@ public class OAuthAuthenticator implements Authenticator<AuthenticationRecord> {
      * @param microsoftClient The Microsoft communication service.
      * @param oAuthTokens The OAuth tokens.
      */
-    private void authenticateTokens(OAuthMicrosoftClient microsoftClient, XboxClient xboxClient, MinecraftClient minecraftClient, OAuthMicrosoftClient.OAuthTokens oAuthTokens) {
+    private void authenticateTokens(@NotNull OAuthMicrosoftClient microsoftClient, @NotNull XboxClient xboxClient, @NotNull MinecraftClient minecraftClient, @NotNull OAuthMicrosoftClient.OAuthTokens oAuthTokens) {
         String xblToken = microsoftClient.authenticateXboxLive(oAuthTokens.accessToken());
         String xblAuthenticationToken = microsoftClient.authenticateXSTS(xblToken);
         xboxClient.checkoutXboxProfile(xblAuthenticationToken);
